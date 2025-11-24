@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, Gauge } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Volume2, VolumeX, View } from 'lucide-react';
 import { PlaybackMode } from '../types';
 
 interface ControlsProps {
@@ -17,6 +17,8 @@ interface ControlsProps {
   onToggleRepeat: () => void;
   playbackRate: number;
   onPlaybackRateChange: (rate: number) => void;
+  showVisualizer: boolean;
+  onShowVisualizer: () => void;
 }
 
 const formatTime = (seconds: number) => {
@@ -40,9 +42,11 @@ export const Controls: React.FC<ControlsProps> = ({
   onToggleShuffle,
   onToggleRepeat,
   playbackRate,
-  onPlaybackRateChange
+  onPlaybackRateChange,
+  showVisualizer,
+  onShowVisualizer
 }) => {
-  
+
   const handleSpeedClick = () => {
     const speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
     const currentIndex = speeds.indexOf(playbackRate);
@@ -71,7 +75,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
       {/* Main Controls */}
       <div className="flex items-center justify-between w-full">
-        
+
         {/* Volume */}
         <div className="flex items-center gap-2 w-1/4 group">
           <button onClick={() => onVolumeChange(volume === 0 ? 1 : 0)} className="text-slate-400 hover:text-white transition-colors">
@@ -93,9 +97,9 @@ export const Controls: React.FC<ControlsProps> = ({
           <button onClick={onPrev} className="text-slate-300 hover:text-white hover:scale-110 transition-transform">
             <SkipBack size={28} fill="currentColor" />
           </button>
-          
-          <button 
-            onClick={onPlayPause} 
+
+          <button
+            onClick={onPlayPause}
             className="w-16 h-16 flex items-center justify-center bg-indigo-500 hover:bg-indigo-400 text-white rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:scale-105 active:scale-95"
           >
             {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
@@ -108,33 +112,42 @@ export const Controls: React.FC<ControlsProps> = ({
 
         {/* Tools: Shuffle, Repeat, Speed */}
         <div className="flex items-center justify-end gap-3 w-1/4">
-            {/* Speed Control */}
-            <button 
-              onClick={handleSpeedClick}
-              className="flex items-center justify-center w-10 h-8 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-700 transition-all border border-transparent hover:border-slate-600"
-              title="Playback Speed"
-            >
-              {playbackRate}x
-            </button>
+          {/* Speed Control */}
+          <button
+            onClick={handleSpeedClick}
+            className="flex items-center justify-center w-10 h-8 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-700 transition-all border border-transparent hover:border-slate-600"
+            title="Playback Speed"
+          >
+            {playbackRate}x
+          </button>
 
-            {/* Shuffle */}
-            <button 
-              onClick={onToggleShuffle} 
-              className={`p-2 rounded-full transition-all ${isShuffle ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-              title="Shuffle"
-            >
-               <Shuffle size={18} />
-            </button>
+          {/* Visualizer */}
+          <button
+            onClick={onShowVisualizer}
+            className={`p-2 rounded-full transition-all ${showVisualizer ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+            title="Visualizer"
+          >
+            <View size={18} />
+          </button>
 
-            {/* Repeat */}
-            <button 
-              onClick={onToggleRepeat} 
-              className={`p-2 rounded-full transition-all relative ${isRepeatOne ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
-              title={isRepeatOne ? "Repeat One" : "Repeat All (Default)"}
-            >
-               <Repeat size={18} />
-               {isRepeatOne && <span className="absolute text-[8px] font-bold top-1 right-1.5">1</span>}
-            </button>
+          {/* Shuffle */}
+          <button
+            onClick={onToggleShuffle}
+            className={`p-2 rounded-full transition-all ${isShuffle ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+            title="Shuffle"
+          >
+            <Shuffle size={18} />
+          </button>
+
+          {/* Repeat */}
+          <button
+            onClick={onToggleRepeat}
+            className={`p-2 rounded-full transition-all relative ${isRepeatOne ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+            title={isRepeatOne ? "Repeat One" : "Repeat All (Default)"}
+          >
+            <Repeat size={18} />
+            {isRepeatOne && <span className="absolute text-[8px] font-bold top-1 right-1.5">1</span>}
+          </button>
         </div>
       </div>
     </div>

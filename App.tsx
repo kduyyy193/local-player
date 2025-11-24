@@ -20,6 +20,7 @@ function App() {
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(true);
+  const [showVisualizer, setShowVisualizer] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(new Audio());
 
@@ -116,6 +117,10 @@ function App() {
     setVolume(val);
     if (audioRef.current) audioRef.current.volume = val;
     storageService.saveSetting('volume', val);
+  };
+
+  const handleShowVisualizer = () => {
+    setShowVisualizer(prev => !prev);
   };
 
   // Effect to handle Playback Rate updates dynamically
@@ -305,7 +310,11 @@ function App() {
                   />
                 )}
 
-                <Visualizer isPlaying={isPlaying} />
+                {
+                  showVisualizer && (
+                    <Visualizer isPlaying={isPlaying} />
+                  )
+                }
 
                 {/* Default Icon if no image */}
                 {!coverImage && (
@@ -407,6 +416,8 @@ function App() {
             onToggleRepeat={toggleRepeat}
             playbackRate={playbackRate}
             onPlaybackRateChange={setPlaybackRate}
+            showVisualizer={showVisualizer}
+            onShowVisualizer={handleShowVisualizer}
           />
         </div>
       </div>
