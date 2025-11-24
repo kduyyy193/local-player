@@ -1,0 +1,5 @@
+{
+  "name": "VibeLocal Player",
+  "description": "Trình phát nhạc cục bộ hiện đại hỗ trợ chọn thư mục và tích hợp AI để phân tích tâm trạng bài hát.",
+  "requestFramePermissions": []
+}
