@@ -5,6 +5,7 @@ import { Visualizer } from './components/Visualizer';
 import { Track, PlaybackMode } from './types';
 import { Play, Sparkles, Info, Camera } from 'lucide-react';
 import { getSongInsight } from './services/geminiService';
+import * as storageService from './services/storageService';
 
 function App() {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -18,11 +19,39 @@ function App() {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement>(new Audio());
 
+  // Initial Data Load
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        // Load settings
+        const savedVolume = await storageService.getSetting('volume');
+        if (savedVolume !== null) setVolume(savedVolume);
+
+        const savedCover = await storageService.getSetting('coverImage');
+        if (savedCover) setCoverImage(savedCover);
+
+        // Load tracks
+        const savedTracks = await storageService.getTracksFromDB();
+        if (savedTracks.length > 0) {
+          setTracks(savedTracks);
+          setCurrentTrack(savedTracks[0]);
+        }
+      } catch (error) {
+        console.error("Failed to restore data", error);
+      } finally {
+        setIsRestoring(false);
+      }
+    };
+
+    initApp();
+  }, []);
+
   // Handle file loading
-  const handleLoadFolder = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLoadFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
@@ -46,6 +75,9 @@ function App() {
     const sortedTracks = newTracks.sort((a, b) => a.name.localeCompare(b.name));
     setTracks(sortedTracks);
 
+    // Persist to DB
+    storageService.saveTracksToDB(sortedTracks).catch(console.error);
+
     if (sortedTracks.length > 0) {
       setCurrentTrack(sortedTracks[0]);
       setIsPlaying(false);
@@ -53,12 +85,37 @@ function App() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setCoverImage(imageUrl);
+      try {
+        const base64 = await storageService.fileToBase64(file);
+        setCoverImage(base64);
+        storageService.saveSetting('coverImage', base64);
+      } catch (err) {
+        console.error("Error saving image", err);
+      }
     }
+  };
+
+  const handleClearData = async () => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ nhạc và cài đặt đã lưu?")) {
+      await storageService.clearAllData();
+      setTracks([]);
+      setCurrentTrack(null);
+      setIsPlaying(false);
+      setCoverImage(null);
+      setAiInsight(null);
+      // Also clear audio source
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+  };
+
+  const handleVolumeChange = (val: number) => {
+    setVolume(val);
+    if (audioRef.current) audioRef.current.volume = val;
+    storageService.saveSetting('volume', val);
   };
 
   // Effect to handle Playback Rate updates dynamically
@@ -99,7 +156,7 @@ function App() {
         audio.load();
         audio.playbackRate = playbackRate; // Apply rate immediately after load
         setAiInsight(null); // Reset AI insight on new track
-        setCoverImage(null); // Reset cover image on new track
+        // Don't reset cover image here anymore, it's global or saved
       }
       if (isPlaying) {
         audio.play().catch(e => console.error("Play error:", e));
@@ -201,6 +258,17 @@ function App() {
     setLoadingInsight(false);
   };
 
+  if (isRestoring) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-slate-950 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400">Đang khôi phục thư viện...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-full bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white overflow-hidden">
       {/* Sidebar */}
@@ -211,12 +279,12 @@ function App() {
           onSelectTrack={(t) => { setCurrentTrack(t); setIsPlaying(true); }}
           onLoadFolder={handleLoadFolder}
           isPlaying={isPlaying}
+          onClearData={handleClearData}
         />
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full relative">
-        {/* Mobile Menu Trigger would go here */}
 
         {/* Center Stage */}
         <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
@@ -333,7 +401,7 @@ function App() {
             duration={duration}
             onSeek={handleSeek}
             volume={volume}
-            onVolumeChange={(v) => { setVolume(v); if (audioRef.current) audioRef.current.volume = v; }}
+            onVolumeChange={handleVolumeChange}
             mode={mode}
             onToggleShuffle={toggleShuffle}
             onToggleRepeat={toggleRepeat}
