@@ -14,7 +14,7 @@ export const getSongInsight = async (filename: string): Promise<string> => {
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `Bạn là một chuyên gia âm nhạc vui tính. Hãy phân tích tên bài hát/tập tin này: "${filename}". 
-    Hãy đoán thể loại, tâm trạng (mood), và viết một nhận xét ngắn gọn (dưới 40 từ) bằng Tiếng Việt về bài hát này hoặc nghệ sĩ có thể liên quan. 
+    Hãy đoán thể loại, tâm trạng (mood), và viết một nhận xét ngắn gọn (dưới 10 từ) bằng Tiếng Việt về bài hát này hoặc nghệ sĩ có thể liên quan. 
     Nếu tên file không rõ ràng, hãy sáng tạo một câu đùa về âm nhạc.`;
 
     const response = await ai.models.generateContent({

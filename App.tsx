@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Playlist } from './components/Playlist';
-import { Controls } from './components/Controls';
-import { Visualizer } from './components/Visualizer';
-import { Track, PlaybackMode } from './types';
-import { Play, Sparkles, Info, Camera } from 'lucide-react';
-import { getSongInsight } from './services/geminiService';
-import * as storageService from './services/storageService';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Playlist } from "./components/Playlist";
+import { Controls } from "./components/Controls";
+import { Visualizer } from "./components/Visualizer";
+import { Track, PlaybackMode } from "./types";
+import { Play, Sparkles, Info, Camera } from "lucide-react";
+import { getSongInsight } from "./services/geminiService";
+import * as storageService from "./services/storageService";
 
 function App() {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -29,10 +29,10 @@ function App() {
     const initApp = async () => {
       try {
         // Load settings
-        const savedVolume = await storageService.getSetting('volume');
+        const savedVolume = await storageService.getSetting("volume");
         if (savedVolume !== null) setVolume(savedVolume);
 
-        const savedCover = await storageService.getSetting('coverImage');
+        const savedCover = await storageService.getSetting("coverImage");
         if (savedCover) setCoverImage(savedCover);
 
         // Load tracks
@@ -57,21 +57,26 @@ function App() {
     if (!files) return;
 
     const newTracks: Track[] = [];
-    const audioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/x-m4a'];
+    const audioTypes = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/x-m4a"];
 
     Array.from(files).forEach((file: File) => {
-      if (audioTypes.some(type => file.type.includes(type) || file.type === '') && file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+      if (
+        audioTypes.some(
+          (type) => file.type.includes(type) || file.type === ""
+        ) &&
+        file.name.match(/\.(mp3|wav|ogg|m4a)$/i)
+      ) {
         newTracks.push({
           id: crypto.randomUUID(),
           name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
           url: URL.createObjectURL(file),
-          file: file
+          file: file,
         });
       }
     });
 
     // Revoke old URLs to prevent memory leaks
-    tracks.forEach(t => URL.revokeObjectURL(t.url));
+    tracks.forEach((t) => URL.revokeObjectURL(t.url));
 
     const sortedTracks = newTracks.sort((a, b) => a.name.localeCompare(b.name));
     setTracks(sortedTracks);
@@ -92,7 +97,7 @@ function App() {
       try {
         const base64 = await storageService.fileToBase64(file);
         setCoverImage(base64);
-        storageService.saveSetting('coverImage', base64);
+        storageService.saveSetting("coverImage", base64);
       } catch (err) {
         console.error("Error saving image", err);
       }
@@ -100,7 +105,11 @@ function App() {
   };
 
   const handleClearData = async () => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ nhạc và cài đặt đã lưu?")) {
+    if (
+      window.confirm(
+        "Bạn có chắc chắn muốn xóa toàn bộ nhạc và cài đặt đã lưu?"
+      )
+    ) {
       await storageService.clearAllData();
       setTracks([]);
       setCurrentTrack(null);
@@ -116,11 +125,11 @@ function App() {
   const handleVolumeChange = (val: number) => {
     setVolume(val);
     if (audioRef.current) audioRef.current.volume = val;
-    storageService.saveSetting('volume', val);
+    storageService.saveSetting("volume", val);
   };
 
   const handleShowVisualizer = () => {
-    setShowVisualizer(prev => !prev);
+    setShowVisualizer((prev) => !prev);
   };
 
   // Effect to handle Playback Rate updates dynamically
@@ -141,14 +150,14 @@ function App() {
     const updateDuration = () => setDuration(audio.duration);
     const handleEnded = () => handleNext();
 
-    audio.addEventListener('timeupdate', updateTime);
-    audio.addEventListener('loadedmetadata', updateDuration);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', updateTime);
-      audio.removeEventListener('loadedmetadata', updateDuration);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", updateTime);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("ended", handleEnded);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack, mode, tracks]); // Re-bind when crucial state changes
@@ -164,7 +173,7 @@ function App() {
         // Don't reset cover image here anymore, it's global or saved
       }
       if (isPlaying) {
-        audio.play().catch(e => console.error("Play error:", e));
+        audio.play().catch((e) => console.error("Play error:", e));
       } else {
         audio.pause();
       }
@@ -180,7 +189,7 @@ function App() {
 
   const getNextTrackIndex = useCallback(() => {
     if (!currentTrack || tracks.length === 0) return -1;
-    const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+    const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
 
     if (mode === PlaybackMode.REPEAT_ONE) {
       return currentIndex;
@@ -223,7 +232,7 @@ function App() {
     }
 
     // Normal or Repeat One (Manual Override) -> Go to next sequential
-    const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+    const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
     const nextIndex = (currentIndex + 1) % tracks.length;
     setCurrentTrack(tracks[nextIndex]);
     setIsPlaying(true);
@@ -231,7 +240,7 @@ function App() {
 
   const handlePrev = () => {
     if (!currentTrack || tracks.length === 0) return;
-    const currentIndex = tracks.findIndex(t => t.id === currentTrack.id);
+    const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
     // If more than 3 seconds in, restart song
     if (audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
@@ -248,11 +257,17 @@ function App() {
   };
 
   const toggleShuffle = () => {
-    setMode(prev => prev === PlaybackMode.SHUFFLE ? PlaybackMode.NORMAL : PlaybackMode.SHUFFLE);
+    setMode((prev) =>
+      prev === PlaybackMode.SHUFFLE ? PlaybackMode.NORMAL : PlaybackMode.SHUFFLE
+    );
   };
 
   const toggleRepeat = () => {
-    setMode(prev => prev === PlaybackMode.REPEAT_ONE ? PlaybackMode.NORMAL : PlaybackMode.REPEAT_ONE);
+    setMode((prev) =>
+      prev === PlaybackMode.REPEAT_ONE
+        ? PlaybackMode.NORMAL
+        : PlaybackMode.REPEAT_ONE
+    );
   };
 
   const fetchAiInsight = async () => {
@@ -281,7 +296,10 @@ function App() {
         <Playlist
           tracks={tracks}
           currentTrackId={currentTrack?.id || null}
-          onSelectTrack={(t) => { setCurrentTrack(t); setIsPlaying(true); }}
+          onSelectTrack={(t) => {
+            setCurrentTrack(t);
+            setIsPlaying(true);
+          }}
           onLoadFolder={handleLoadFolder}
           isPlaying={isPlaying}
           onClearData={handleClearData}
@@ -290,17 +308,19 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full relative">
-
         {/* Center Stage */}
         <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
           {/* Background Glow */}
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600 rounded-full blur-[128px] opacity-20 transition-opacity duration-700 ${isPlaying ? 'opacity-40 scale-110' : 'opacity-20 scale-100'}`}></div>
+          <div
+            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600 rounded-full blur-[128px] opacity-20 transition-opacity duration-700 ${
+              isPlaying ? "opacity-40 scale-110" : "opacity-20 scale-100"
+            }`}
+          ></div>
 
           {currentTrack ? (
             <div className="z-10 w-full max-w-2xl flex flex-col items-center text-center gap-8">
               {/* Album Art / Visualizer Placeholder */}
               <div className="w-64 h-64 md:w-80 md:h-80 rounded-3xl bg-slate-800/50 border border-slate-700 shadow-2xl flex items-end justify-center overflow-hidden relative group">
-
                 {/* Background Image if uploaded */}
                 {coverImage && (
                   <img
@@ -310,16 +330,15 @@ function App() {
                   />
                 )}
 
-                {
-                  showVisualizer && (
-                    <Visualizer isPlaying={isPlaying} />
-                  )
-                }
+                {showVisualizer && <Visualizer isPlaying={isPlaying} />}
 
                 {/* Default Icon if no image */}
                 {!coverImage && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Play size={64} className="text-indigo-500/20 fill-indigo-500/20" />
+                    <Play
+                      size={64}
+                      className="text-indigo-500/20 fill-indigo-500/20"
+                    />
                   </div>
                 )}
 
@@ -332,7 +351,9 @@ function App() {
                     onChange={handleImageUpload}
                   />
                   <Camera size={32} className="text-white mb-2" />
-                  <span className="text-white text-sm font-medium">Đổi ảnh bìa</span>
+                  <span className="text-white text-sm font-medium">
+                    Đổi ảnh bìa
+                  </span>
                 </label>
               </div>
 
@@ -366,7 +387,10 @@ function App() {
                 ) : (
                   <div className="bg-indigo-950/50 border border-indigo-500/20 p-4 rounded-xl text-sm text-indigo-200 max-w-md animate-in fade-in slide-in-from-bottom-4">
                     <div className="flex items-start gap-3">
-                      <Info className="shrink-0 mt-0.5 text-indigo-400" size={16} />
+                      <Info
+                        className="shrink-0 mt-0.5 text-indigo-400"
+                        size={16}
+                      />
                       <p>{aiInsight}</p>
                     </div>
                   </div>
@@ -379,8 +403,12 @@ function App() {
                 <Play size={48} className="text-slate-600 ml-2" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-slate-200">Chào mừng đến với VibeLocal</h1>
-                <p className="text-slate-400 mt-2">Chọn thư mục nhạc để bắt đầu</p>
+                <h1 className="text-3xl font-bold text-slate-200">
+                  Chào mừng đến với VibeLocal
+                </h1>
+                <p className="text-slate-400 mt-2">
+                  Chọn thư mục nhạc để bắt đầu
+                </p>
               </div>
               {/* Mobile Upload Button for convenience */}
               <div className="md:hidden">
